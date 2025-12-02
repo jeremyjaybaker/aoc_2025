@@ -1,5 +1,5 @@
 int current = 50;
-string fileContent = File.ReadAllText("./aoc_1_2025_input.txt");
+string fileContent = File.ReadAllText("./day1/input.txt");
 string[] instructions = fileContent.Split(new[] { "\n" }, StringSplitOptions.None);
 (int ZeroCount, int CrossZeroCount) counts = (0, 0);
 

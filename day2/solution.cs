@@ -1,4 +1,4 @@
-string fileContent = File.ReadAllText("./aoc_2_2025_input.txt");
+string fileContent = File.ReadAllText("./day2/input.txt");
 string[] ranges = fileContent.Split(new[] { "," }, StringSplitOptions.None);
 
 // Controls whether this program is solving for part 1 or part 2 of the puzzle
@@ -41,6 +41,14 @@ static bool invalidUnderPartOneRules(string id)
   return false;
 }
 
+// Methodology:
+// - For each ID, construct substrings of growing length starting at the beginning of the ID
+//   Ie, for "123123123", substrings used to test are "1", "12", "123", "1231"
+// - For each substring, try to reconstruct the original string using only the substring
+//   Reconstruction with "1" fails, "111111111" != "123123123"
+//   Reconstructon with "12" fails, 2 does not cleanly divide 9
+//   Reconstruction with "123" succeeds, "123123123" == "123123123", so the ID must be invalid
+//   Reconstruction with "1234" does not happen as we've returned early
 static bool invalidUnderPartTwoRules(string id)
 {
   for (int substrLength = 1; substrLength <= id.Length / 2; substrLength++)
