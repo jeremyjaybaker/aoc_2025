@@ -17,9 +17,9 @@ foreach (string range in ranges)
     string stringId = productId.ToString();
 
     if ((partTwo && invalidUnderPartTwoRules(stringId)) || invalidUnderPartOneRules(stringId))
-    {      
+    {
       invalidIdsInRange.Add(productId);
-      allInvalidIds.Add(productId);        
+      allInvalidIds.Add(productId);
     }
   }
 
@@ -48,7 +48,7 @@ static bool invalidUnderPartOneRules(string id)
 //   Reconstruction with "1" fails, "111111111" != "123123123"
 //   Reconstructon with "12" fails, 2 does not cleanly divide 9
 //   Reconstruction with "123" succeeds, "123123123" == "123123123", so the ID must be invalid
-//   Reconstruction with "1234" does not happen as we've returned early
+//   Reconstruction with "1231" does not happen as we've returned early
 static bool invalidUnderPartTwoRules(string id)
 {
   for (int substrLength = 1; substrLength <= id.Length / 2; substrLength++)
@@ -58,7 +58,7 @@ static bool invalidUnderPartTwoRules(string id)
     // therefore the ID is valid
     if (id.Length % substrLength != 0) continue;
 
-    // Attempt to reconstruct the given id using a substring of 
+    // Attempt to reconstruct the given id using a substring of
     // `substrLength` length
     int repetitionCount = id.Length / substrLength;
     string substring = id.Substring(0, substrLength);
@@ -66,7 +66,7 @@ static bool invalidUnderPartTwoRules(string id)
     List<string> idParts = [];
     for(int i = 0; i < repetitionCount; i++)
       idParts.Add(substring);
-    
+
     // If able to reconstruct the ID, it must be invalid
     if (string.Join("", idParts) == id)
       return true;
