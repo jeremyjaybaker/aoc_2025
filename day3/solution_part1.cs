@@ -1,3 +1,6 @@
+// NOTE part 2 can also solve part 1, it has a more generalizable algorithm.
+// This is just the original code for part 1 that couldn't be generalized easily.
+
 using System.Linq;
 string fileContent = File.ReadAllText("./day3/input.txt");
 string[] banks = fileContent.Split(new[] { "\n" }, StringSplitOptions.None);
