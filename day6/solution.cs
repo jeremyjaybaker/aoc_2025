@@ -5,39 +5,48 @@ string[] lines = fileContent.Split(new[] { "\n" }, StringSplitOptions.None);
 
 bool part2 = true;
 
-// Initial setup includes:
-// - array of operators
-// - indexes where each column of numbers needs to be split
-// - a 2-dimensional array of stringified numbers for easier access and
-//   iteration through the input list of numbers
-string[] operators = GetOperatorArray(lines);
-int[] columnDelineators = GetColumnDelineators(lines[lines.Length-1]);
+char[] operators = GetOperatorArray(lines);
+
+// Column delineators are indexes that separate columns of numbers from the input
+string rawOperatorLine = lines[lines.Length-1];
+int[] columnDelineators = GetColumnDelineators(rawOperatorLine);
+
+// A copy of the input without the last line containing operators
 string[] linesWithoutOperators = new string[lines.Length - 1];
 Array.Copy(lines, 0, linesWithoutOperators, 0, lines.Length - 1);
+
+// a 2-dimensional representation of the input numbers as strings including spaces,
+// ie the columns
+// 123  64
+//  23 334
+//   2  23
+// is represented as [['123', ' 64'], [' 23', '334'], ['  2', ' 23']
+//
+// The spaces can simply be ignored for Part 1, and for Part 2 their position
+// is relevant to determining Cephalopod Math results
 string[,] numberGrid = CreateGrid(linesWithoutOperators, columnDelineators);
 
 long totalSum = 0;
 long columnResult;
+
 for (int column = 0; column < operators.Length; column++)
 {
-  // Create the set of numbers to operate on for the current column
+  // Collect the set of numbers in the current column
   string[] columnNumbers = new string[linesWithoutOperators.Length];
   for (int row = 0; row < linesWithoutOperators.Length; row++)
     columnNumbers[row] = numberGrid[row, column];
 
-  if (part2)
-    columnNumbers = ColumnTransform(columnNumbers);
-  //Console.WriteLine($"After transformation, col nums are {string.Join(",", columnNumbers.ToList().Select(a => $"{a}"))}");
+  // Part 2 can use the same addition/multiplication code as Part 1
+  // as long as you transform the numbers in each column into a 
+  // different orientation
+  if (part2) columnNumbers = ColumnTransform(columnNumbers);
 
-  if (operators[column] == "+")
-  {
+  if (operators[column] == '+')
     columnResult = columnNumbers.ToList().Select(a => long.Parse(a)).Sum();
-  }
-  else if (operators[column] == "*")
+  else if (operators[column] == '*')
   {
     columnResult = 1;
-    foreach (string num in columnNumbers)
-      columnResult *= long.Parse(num);
+    foreach (string num in columnNumbers) columnResult *= long.Parse(num);
   }
   else
     throw new InvalidOperationException($"Operations should be either + or *, but is {operators[column]}");
@@ -47,13 +56,13 @@ for (int column = 0; column < operators.Length; column++)
 
 Console.WriteLine($"Total sum is {totalSum}");
 
+// Used exclusively in Part 2
 static string[] ColumnTransform(string[] column)
 {
-  // Count of the numbers that will be present in the entire column's
-  // addition or multiplication
+  // Count of the numbers that will be present in the entire column's addition or multiplication
+  // Ie, 4 + 431 + 623 has a component count of 3
   int componentCount = $"{column.ToList().Select(str => long.Parse(str)).Max()}".Length;
 
-  Console.WriteLine($"Component count is {componentCount}");
   List<string> components = [];
 
   for (int i = 0; i < componentCount; i++)
@@ -61,41 +70,36 @@ static string[] ColumnTransform(string[] column)
     List<char> component = [];
     foreach (string str in column)
     {
-      // null/empty check
+      // This is when preserving spacing within each cell of the grid
+      // becomes critical
       if (str[i] == ' ') continue;
       component.Add(str[i]);
     }
 
-    Console.WriteLine($"Setting component[{i}]: {string.Join("", component)}");
+    // Console.WriteLine($"Setting component[{i}]: {string.Join("", component)}");
     components.Add(string.Join("", component));
   }
 
   return components.ToArray();
 }
 
-// Returns a stringified number with leading dashes depending on digitCount.
-// Example: number = 6, digitCount = 4, return = "---6"
-static string PaddedNumberAsString(int number, int digitCount)
+static char[] GetOperatorArray(string[] lines)
 {
-  int dashCount = digitCount - $"{number}".Length;
-  string dashes = string.Join("", Enumerable.Repeat("-", dashCount).ToArray());
-  return $"{dashes}{number}";
-}
+  List<char> split = Regex
+    .Split(lines[lines.Length - 1], @"\s+")
+    .ToList()
+    .Select(str => {
+      if (string.IsNullOrEmpty(str))
+        return '\0';
+      else
+        return str.ToCharArray()[0];
+    })
+    .ToList();
 
-/*static int[] MakeNumberArrayFromLine(string line)
-{
-  List<string> numList = Regex.Split(line, @"\s+").ToList();
-  numList.RemoveAll(str => string.IsNullOrEmpty(str));
-  
-  return numList
-    .Select(str => int.Parse(str))
-    .ToArray();
-}*/
-
-static string[] GetOperatorArray(string[] lines)
-{
-  List<string> split = Regex.Split(lines[lines.Length - 1], @"\s+").ToList();
-  split.RemoveAll(str => string.IsNullOrEmpty(str));
+  // Remove any blank values before returning,
+  // usually blank values are due to right-most
+  // whitespace on the last operator.
+  split.RemoveAll(c => c == 0);
 
   return split.ToArray();
 }
@@ -134,6 +138,13 @@ static int[] GetColumnDelineators(string operators)
 
 static string[] SplitStringOnAllIndexes(string line, int[] indexes)
 {
+  // This algorithm could probably be simplified, but it's conceptually
+  // easier to:
+  // 1) build the first string
+  // 2) iterate through the delineation indexes and split out individual strings
+  //    as you go. You'll need the current deliniator plus the next one which is
+  //    why it's awkward to handle the very last string as part of the loop
+  // 3) build the last string
   int startIndex = 0;
   int endIndex = indexes[0] - 1;
   string substr = line.Substring(startIndex, endIndex - startIndex + 1);
